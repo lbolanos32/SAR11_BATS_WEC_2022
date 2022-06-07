@@ -1,8 +1,9 @@
-#This R script reproduce the Figure X: Linear models of the different SAR11 ASVS from the Bermuda Atlantic Time Series and The Western English Channel.
+#This R script reproduce the Figure 5: Linear models of the SAR11 ASVS displaying significant seasonality from the Bermuda Atlantic Time Series and The Western English Channel.
 
 #############
 #####WEC#####
 #############
+
 library("phyloseq")
 library("ggplot2")
 library("dplyr")
@@ -18,7 +19,6 @@ library(zoo)
 library("ggdendro")
 library("stringr")
 library("directlabels")
-
 
 #####Create the PhyloSeq object####
 
@@ -53,7 +53,10 @@ SAR11_ASVt<-t(SAR11_ASV)
 #####Create a data.frame cols=ASV, rows= samples -> add date to this and estimate the sin/cos thing 
 SAR11tax<-as.data.frame(tax_table(SAR11_WECphy1krel)[,6]) ###Keep this one to add to the melted object
 
-SAR11_ASV<-as.data.frame(otu_table(SAR11_WECphy1krel))ASV_frw<-as.data.frame(x = t(SAR11_ASV), stringsAsFactors = FALSE)md_to_add<-as.data.frame(sample_data(SAR11_WECphy1krel))[,c(4)] #ID,Date, DateEnvfinal_2a<-cbind(ASV_frw,md_to_add) #I'll use Date to estimate stuff
+SAR11_ASV<-as.data.frame(otu_table(SAR11_WECphy1krel))
+ASV_frw<-as.data.frame(x = t(SAR11_ASV), stringsAsFactors = FALSE)
+md_to_add<-as.data.frame(sample_data(SAR11_WECphy1krel))[,c(4)] #ID,Date, DateEnv
+final_2a<-cbind(ASV_frw,md_to_add)
 final_2a$Date<-as.Date(final_2a$Date,"%m/%d/%Y")
 
 final_2a_sort<-final_2a[order(final_2a$Date),] ##sort from least recent to most recent
@@ -70,7 +73,7 @@ final_2a_sort$Serial<- as.numeric(-difftime(WECTS_start,final_2a_sort$Date)+1)
 
 ##Days since winter solstice (21 Dic)
 
-#Add the winter solstice (Basically you could arrange it for any date you may want to explore
+#Add the winter solstice 
 final_2a_sort$wintersols[final_2a_sort$Date>as.Date("2012-01-01") & final_2a_sort$Date<as.Date("2012-12-21")] <- "2011-12-21"
 final_2a_sort$wintersols[final_2a_sort$Date>as.Date("2013-01-01") & final_2a_sort$Date<as.Date("2013-12-21")] <- "2012-12-21"
 final_2a_sort$wintersols[final_2a_sort$Date>as.Date("2014-01-01") & final_2a_sort$Date<as.Date("2014-12-21")] <- "2013-12-21"
@@ -81,7 +84,7 @@ final_2a_sort$wintersols[final_2a_sort$Date>as.Date("2018-01-01") & final_2a_sor
 
 final_2a_sort$DaysSincewintersols<-as.numeric(-difftime(final_2a_sort$wintersols,final_2a_sort$Date)+1) #Add the numeric column
 
-#jultonumeric
+#julian to numeric
 final_2a_sort$Jul<-as.numeric(final_2a_sort$Jul)
 
 #models based on the sin and cos
@@ -101,24 +104,24 @@ for(i in names(final_2a_sort)[1:144]){
 #Create a data set with the regressions
 fitted.values(storage[[1]])
 
-#Get the significant regressions (THIS MUST BE THE SAME ASVS as I did with g.fisher
+#Get the significant regressions
 pvalues_lm<-sapply(storage, function(x){
   ff <- summary(x)$fstatistic
   pf(ff[1], df1 = ff[2], df2 = ff[3], lower.tail = FALSE)
 })
 
-pvalues_lm05<-pvalues_lm[pvalues_lm < 0.05] #The names here should be ~ to g.fisher #103/144 = 71%
+pvalues_lm05<-pvalues_lm[pvalues_lm < 0.05]
 
 #All the significant 
 sign_names<-str_remove(names(pvalues_lm05), ".value") #extract this from both datasets
 
-#Number of the column that matches a list of names get the position of the names <0.05
+#Number of the column that matches a list of names, get the position of the names <0.05
 signll<-match(sign_names,names(final_2a_sort))
 
 #subset list of lists 
 storage05<-storage[signll]
 
-#I need the constant, sin and cos of the models, the cosDX and SinDX originals and
+#I need the constant, sin and cos of the models
 #Get the constant, sin and cos of the models:
 coeffs05<-data.frame(coeffs=sapply(storage05, FUN=function(item){item$coefficients}))
 colnames(coeffs05)<-str_remove(colnames(coeffs05), "coeffs.")
@@ -126,7 +129,7 @@ colnames(coeffs05)<-str_remove(colnames(coeffs05), "coeffs.")
 #Subset original day, sin, cos
 newdf_model <- final_2a_sort[, c("Serial","cosDX1","sinDX1")]
 
-#automatizise this :P 
+#automatize this :P 
 newdf_model$WEC1<-coeffs05$WEC1[1]+(newdf_model$sinDX1*coeffs05$WEC1[2])+(newdf_model$cosDX1*coeffs05$WEC1[3])
 newdf_model$WEC3<-coeffs05$WEC3[1]+(newdf_model$sinDX1*coeffs05$WEC3[2])+(newdf_model$cosDX1*coeffs05$WEC3[3])
 newdf_model$WEC6<-coeffs05$WEC6[1]+(newdf_model$sinDX1*coeffs05$WEC6[2])+(newdf_model$cosDX1*coeffs05$WEC6[3])
@@ -232,18 +235,15 @@ newdf_model$WEC26018<-coeffs05$WEC26018[1]+(newdf_model$sinDX1*coeffs05$WEC26018
 newdf_model$WEC26223<-coeffs05$WEC26223[1]+(newdf_model$sinDX1*coeffs05$WEC26223[2])+(newdf_model$cosDX1*coeffs05$WEC26223[3])
 
 
-
 #newdf_model for melt 
-
 Tomelt<-(newdf_model[c(1,4:106)])
 
 #Add taxa to this melted 
 newdf_model_melted<-melt(Tomelt,id.vars="Serial")
 
-#Agregar taxa extracting sign_names variable from the Phyloseq object, thereafter extract the tax table only with genus 
+#Add taxa extracting sign_names variable from the Phyloseq object, thereafter extract the tax table only with genus 
 
 ##### Subset from physeq sar11.
-
 phy_sign05 = prune_taxa(sign_names, SAR11_WECphy)
 
 GenusSAR11sign1<-data.frame(tax_table(phy_sign05))[,6,drop=FALSE]
@@ -304,7 +304,6 @@ WEC_model_plot<-plot_grid(meds_WEC, legend, rel_widths = c(2.2, .5))
 ############################
 
 #The below code replicates the linear models use above for WEC but now for BATS 2016-2018
-
 count_tabS11 <- read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOSotu5.otu", header=T, row.names=1, check.names=F)
 sample_info_tabS11 <- read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOSenvts5.env", header=T, row.names=1, check.names=F, sep ="\t")
 tax_tabS11 <- as.matrix(read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOStax5.tax", header=T, row.names=1, check.names=F, sep="\t",na.strings = "#NA")) #No dejar espacios en blanco
@@ -320,12 +319,16 @@ S11SAM= sample_data(sample_info_tabS11)
 
 S11phy<-phyloseq(S11OTU,S11TAX,S11SAM)
 
-ts = get_variable(S11phy, "Type") %in% "BATS"sample_data(S11phy)$ts <- factor(ts)phyTS<-subset_samples(S11phy, ts %in% TRUE)
+ts = get_variable(S11phy, "Type") %in% "BATS"
+sample_data(S11phy)$ts <- factor(ts)
+phyTS<-subset_samples(S11phy, ts %in% TRUE)
 
 phyTS_prun<-prune_taxa(taxa_sums(phyTS) > 0, phyTS) # De 3193 a 2875 ASVs (318)
 
 ##Get all the 5m samples####
-ts5 = get_variable(phyTS_prun, "Depth_C") %in% "0"sample_data(phyTS_prun)$ts5 <- factor(ts5)phyTS5m<-subset_samples(phyTS_prun, ts5 %in% TRUE) ###163 samples
+ts5 = get_variable(phyTS_prun, "Depth_C") %in% "0"
+sample_data(phyTS_prun)$ts5 <- factor(ts5)
+phyTS5m<-subset_samples(phyTS_prun, ts5 %in% TRUE) ###163 samples
 
 phyTS5mV1 <- prune_samples(sample_sums(phyTS5m)>=1000, phyTS5m) #prune samples less than 1000 reads (eliminate 17 --> 146/163)
 
@@ -350,10 +353,12 @@ SAR11_BATStax<-as.data.frame(tax_table(SAR11_BATSphyMiSeqrel)[,8]) ###Keep this 
 
 ASV_frw_BATS<-as.data.frame(x = t(SAR11_BATS_ASV), stringsAsFactors = FALSE)
 
-ASV_frw_BATS<-as.data.frame(x = t(SAR11_BATS_ASV), stringsAsFactors = FALSE)md_to_add_BATS<-as.data.frame(sample_data(SAR11_BATSphyMiSeqrel))[,c(31)] #ID,Date, DateEnvfinal_2a_BATS<-cbind(ASV_frw_BATS,md_to_add_BATS) #I'll use Date to estimate stuff
+ASV_frw_BATS<-as.data.frame(x = t(SAR11_BATS_ASV), stringsAsFactors = FALSE)
+md_to_add_BATS<-as.data.frame(sample_data(SAR11_BATSphyMiSeqrel))[,c(31)] #ID,Date, DateEnv
+final_2a_BATS<-cbind(ASV_frw_BATS,md_to_add_BATS) #I'll use Date to estimate
 final_2a_BATS$Date<-as.Date(final_2a_BATS$Date,"%m/%d/%Y")
 
-final_2a_sort_BATS<-final_2a_BATS[order(final_2a_BATS$Date),] ##sort from least recent to most recent
+final_2a_sort_BATS<-final_2a_BATS[order(final_2a_BATS$Date),] ##sort from oldest to most recent
 final_2a_sort_BATS$Date<-as.Date(final_2a_sort_BATS$Date,"%Y-%m-%d")
 
 ##Add the Julian day 
@@ -365,14 +370,14 @@ BATS_start<- as.Date('2016-01-01')
 final_2a_sort_BATS$Serial<- as.numeric(-difftime(BATS_start,final_2a_sort_BATS$Date)+1)
 
 ##Days since winter solstice (21 Dic)
-#Add the winter solstice (Basically you could arrange it for any date you may want to explore)
+#Add the winter solstice
 final_2a_sort_BATS$wintersols[final_2a_sort_BATS$Date>as.Date("2016-01-01") & final_2a_sort_BATS$Date<as.Date("2016-12-21")] <- "2015-12-21"
 final_2a_sort_BATS$wintersols[final_2a_sort_BATS$Date>as.Date("2017-01-01") & final_2a_sort_BATS$Date<as.Date("2017-12-21")] <- "2016-12-21"
 final_2a_sort_BATS$wintersols[final_2a_sort_BATS$Date>as.Date("2018-01-01") & final_2a_sort_BATS$Date<as.Date("2018-12-21")] <- "2017-12-21" #The most recent date is 2018-12-15
 
 final_2a_sort_BATS$DaysSincewintersols<-as.numeric(-difftime(final_2a_sort_BATS$wintersols,final_2a_sort_BATS$Date)+1) #Add the numeric column
 
-#jultonumeric
+#julian to numeric
 final_2a_sort_BATS$Jul<-as.numeric(final_2a_sort_BATS$Jul)
 
 #models based on the sin and cos
@@ -393,26 +398,26 @@ for(i in names(final_2a_sort_BATS)[1:501]){
 #Create a data set with the regressions
 fitted.values(storage_BATS[[1]])
 
-#Get the significant regressions (THIS MUST BE THE SAME ASVS as I did with g.fisher
+#Get the significant regressions
 pvalues_lm_BATS<-sapply(storage_BATS, function(x){
   ff <- summary(x)$fstatistic
   pf(ff[1], df1 = ff[2], df2 = ff[3], lower.tail = FALSE)
 })
 
-#Before proceding some ASVs retrieve a "NA" for the sake of our pipeline I'll remove these. 
+#remove NAs. 
 pvalues_lm_BATS<-pvalues_lm_BATS[!is.na(pvalues_lm_BATS)]
-pvalues_lm_BATS05<-pvalues_lm_BATS[pvalues_lm_BATS < 0.05] #The names here should be ~ to g.fisher HERE=223/501 = 44.5% g.fisher predicted 49.7 :O !!! This is so cool!
+pvalues_lm_BATS05<-pvalues_lm_BATS[pvalues_lm_BATS < 0.05] #223/501 = 44.5%
 
 #All the significant 
 sign_names_BATS<-str_remove(names(pvalues_lm_BATS05), ".value") #extract this from both datasets
 
-#Number of the column that matches a list of names get the position of the names <0.05
+#Number of the column that matches a list of names, get the position of the names <0.05
 signll_BATS<-match(sign_names_BATS,names(final_2a_sort_BATS))
 
 #subset list of lists 
 storage_BATS05<-storage_BATS[signll_BATS]
 
-#I need the constant, sin and cos of the models, the cosDX and SinDX originals and
+#I need the constant, sin and cos of the models
 #Get the constant, sin and cos of the models:
 coeffs05_BATS<-data.frame(coeffs=sapply(storage_BATS05, FUN=function(item){item$coefficients}))
 colnames(coeffs05_BATS)<-str_remove(colnames(coeffs05_BATS), "coeffs.")
@@ -653,13 +658,13 @@ Tomelt_BATS<-(newdf_model_BATS[c(1,4:226)])
 #Add taxa to this melted 
 newdf_model_BATS_melted<-melt(Tomelt_BATS,id.vars="Serial")
 
-#Agregar taxa extracting sign_names variable from the Phyloseq object, thereafter extract the tax table only with genus 
+#Add taxa extracting sign_names variable from the Phyloseq object, thereafter extract the tax table only with genus 
 
-##### Subset from physeq sar11.
+##### Subset from physeq SAR11.
 phy_sign05_BATS = prune_taxa(sign_names_BATS, SAR11B5)
 GenusSAR11sign1_BATS<-data.frame(tax_table(phy_sign05_BATS))[,8,drop=FALSE]
 
-GenusSAR11sign1_BATS$ASV<-rownames(GenusSAR11sign1_BATS) #GenusSAR11sign1_BATS contains the neccesary to add taxa to melted
+GenusSAR11sign1_BATS$ASV<-rownames(GenusSAR11sign1_BATS) #GenusSAR11sign1_BATS contains the neccesary to add taxa to melted object
 
 #change variable to ASV in newdf_model_BATS_melted 
 names(newdf_model_BATS_melted)[2]<-"ASV"
