@@ -42,9 +42,9 @@ start.end3 <- c(as.Date("2016-03-08"),as.Date("2018-12-15"))
 
 #Create the phyloseq object
 
-count_tabS11phyTS5m <- read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOSotu5.otu", header=T, row.names=1, check.names=F)
-sample_info_tabS11phyTS5m <- read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOSenvts5.env", header=T, row.names=1, check.names=F, sep ="\t")
-tax_tabS11phyTS5m <- as.matrix(read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOStax5.tax", header=T, row.names=1, check.names=F, sep="\t",na.strings = "#NA"))
+count_tabS11phyTS5m <- read.table("BIOSotu5.otu", header=T, row.names=1, check.names=F)
+sample_info_tabS11phyTS5m <- read.table("BIOSenvts5.env", header=T, row.names=1, check.names=F, sep ="\t")
+tax_tabS11phyTS5m <- as.matrix(read.table("BIOStax5.tax", header=T, row.names=1, check.names=F, sep="\t",na.strings = "#NA"))
 sample_info_tabS11$Date <- as.Date(with(sample_info_tabS11, paste(year, month, day,sep="-")), "%Y-%m-%d")
 
 #Use as date
@@ -67,7 +67,13 @@ BATS_1aRel<-transform_sample_counts(glomV1filt_all, function(x){x / sum(x)})
 
 tax1a<-as.data.frame(tax_table(BATS_1aRel)[,4])
 
-a1_ASV<-as.data.frame(otu_table(BATS_1aRel))a1_ASV[ "Taxa" ] <- tax1a[,1]#dim(a1_ASV)#2 147ASV_frame1a <- a1_ASV[,-147]rownames(ASV_frame1a) <- a1_ASV[,147]ASV_frw1a<-t(ASV_frame1a)
+a1_ASV<-as.data.frame(otu_table(BATS_1aRel))
+a1_ASV[ "Taxa" ] <- tax1a[,1]
+#dim(a1_ASV)
+#2 147
+ASV_frame1a <- a1_ASV[,-147]
+rownames(ASV_frame1a) <- a1_ASV[,147]
+ASV_frw1a<-t(ASV_frame1a)
 
 md_to_add<-as.data.frame(sample_data(phyTS5mpruneV2))[,c(7,9,32)] #Date(51) and Temperature Checar esto xq no lo tengo. 
 final_2a<-cbind(ASV_frw1a,md_to_add)
@@ -122,7 +128,15 @@ glomV1filtB5<-tax_glom(BATS_SAR11B5rel, taxrank="tax")
 
 SAR11B5tax<-as.data.frame(tax_table(glomV1filtB5)[,8])
 
-SAR11B5_ASV<-as.data.frame(otu_table(glomV1filtB5))SAR11B5_ASV[ "Taxa" ] <- SAR11B5tax[,1]#dim(SAR11B5_ASV)#ASV_frame2 <- SAR11B5_ASV[,-147]rownames(ASV_frame2) <- SAR11B5_ASV[,147]ASV_frw<-t(ASV_frame2)md_to_add<-as.data.frame(sample_data(glomV1filtB5))[,c(7,9,32)] #Date,MLD and Temperature Checar esto xq no lo tengo. final_2a<-cbind(ASV_frw,md_to_add)
+SAR11B5_ASV<-as.data.frame(otu_table(glomV1filtB5))
+SAR11B5_ASV[ "Taxa" ] <- SAR11B5tax[,1]
+#dim(SAR11B5_ASV)
+#
+ASV_frame2 <- SAR11B5_ASV[,-147]
+rownames(ASV_frame2) <- SAR11B5_ASV[,147]
+ASV_frw<-t(ASV_frame2)
+md_to_add<-as.data.frame(sample_data(glomV1filtB5))[,c(7,9,32)] #Date,MLD and Temperature Checar esto xq no lo tengo. 
+final_2a<-cbind(ASV_frw,md_to_add)
 
 fn2a_melt<-melt(final_2a,id.vars=c("Date","Temp","MLD"),measure.vars = c("I","I;Ia,Ia.1","I;Ia,Ia.3","I;Ia,Ia.4","I;Ib","I;Ib;Ib.1","I;Ib;Ib.2","I;Ic;Ic.1","I;Ic;Ic.2","II","II;IIa;IIa.A","II;IIa;IIa.B","II;IIa;IIa_NA","II;IIb","III;IIIa","clade N2","IV"))
 
