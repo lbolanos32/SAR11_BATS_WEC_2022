@@ -14,9 +14,9 @@ library("DESeq2")
 
 #####Generate the phyloseq object BATScf #####
 
-count_tabS11phyTS5m <- read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOSotu5.otu", header=T, row.names=1, check.names=F)
-SAR11df_envUPDATE<-read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Sup/BATS_S11_5m_envfile.txt", header=T, row.names=1, check.names=F, sep ="\t")
-tax_tabS11phyTS5m <- as.matrix(read.table("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Github_submission/BIOStax5.tax", header=T, row.names=1, check.names=F, sep="\t",na.strings = "#NA"))
+count_tabS11phyTS5m <- read.table("BIOSotu5.otu", header=T, row.names=1, check.names=F)
+SAR11df_envUPDATE<-read.table("BATS_S11_5m_envfile.txt", header=T, row.names=1, check.names=F, sep ="\t")
+tax_tabS11phyTS5m <- as.matrix(read.table("BIOStax5.tax", header=T, row.names=1, check.names=F, sep="\t",na.strings = "#NA"))
 
 #Add 2clusters
 SAR11df_envUPDATE$Date<-as.Date(SAR11df_envUPDATE$Date,"%Y-%m-%d")
@@ -73,7 +73,6 @@ subset_samples(
 !is.na(Turner.Chl.a)
 )
 
-26/37
 bray_not_na_phynaBATSMiSeq <- phyloseq::distance(physeq = phynaBATS_MiSeq, method = "bray")
 
 cap_ord_miseq <- ordinate(
@@ -163,13 +162,10 @@ constrmiseq_clusters<-cap_plot2_miseq_clusters +
 
 #plot_grid(constrmiseq,constrmiseq_clusters) #panels A and B
 
-################################
-################################
+                     
 ##############WEC###############
 
 #####Generate the phyloseq object WECcf #####
-
-setwd("/Users/luisbolanos/Documents/MyDrafts/InProgress/SAR11TS/Analysis/WEC/")
 countwec <- read.table("WEC_mar.otu", header=T, row.names=1, check.names=F)
 sampleinfowec <- read.table("WEC_mar.env", header=T, row.names=1, check.names=F, sep ="\t")
 taxwec <- as.matrix(read.table("WEC_marV2.tax", header=T, row.names=1, check.names=F, na.strings="", sep="\t")) 
@@ -191,7 +187,6 @@ WEC<-phyloseq(OTUmar,TAXmar,SAMar)
 WECcf= filter_taxa(WEC, function(x) sum(x > 1) > (0.0015*length(x)), TRUE)
 
 
-#Multiple trials with SAR11: How much better does it get the constrained ordination. 
 ####################Constrained ordination SAR11###################
 family_counts_tab <- otu_table(tax_glom(WECcf, taxrank="Family")) 
 
@@ -205,6 +200,7 @@ temp_major_taxa_counts_tab <- family_counts_tab[!row.names(family_counts_tab) %i
 rest<-colSums(temp_major_taxa_counts_tab)
 SAR11<-colSums(family_counts_tab)-rest
 SF<-rbind("SAR11"=SAR11, "WEC_Other"=rest)
+
 #######New OTU
 SAR11_WECphy = subset_taxa(WECcf, Order=="SAR11_clade")
 SAR11_ASVs_tab <- otu_table(SAR11_WECphy) 
@@ -237,27 +233,19 @@ bray_not_na_WECSAR11 <- phyloseq::distance(physeq = phyeuphminrarWSAR11_WECphy, 
 ######CAP SAR11 SEASONS AND CLUSTERS 
 #Environmental data available for most of the samples 
 
-#phyeuphminrarWSAR11_WECphy has 211 samples. Based on the relative contribution 
-
 phynaWECSAR11 <- phyeuphminrarWSAR11_WECphy%>%
 subset_samples(
 !is.na(Date)& 
 !is.na(NITRITE_0)& 
 !is.na(NITRATE.NIT_0)& 
 !is.na(AMMONIA_0)& 
-#!is.na(SILICATE_0)& 
 !is.na(PHOSPHATE_0)& 
 !is.na(salinity_PSU_2.5)& 
 !is.na(oxygen_uM_2.5)& 
 !is.na(temp_C_2.5)& 
 !is.na(Chl_0m)
-#!is.na(total.rainfall.for.week)&
-#!is.na(average.weekly.river.flow)&
-#!is.na(Par_uE.m2.s_2.5)&
-#!is.na(average.weekly.wind.speed)
 )
-#!is.na(Par_uE.m2.s_2.5)& a lot of samples don't have this data :(
-#After all this 139/262 samples
+
 
 
 bray_not_naconstr_WECSAR11 <- phyloseq::distance(physeq =phynaWECSAR11, method = "bray")
@@ -356,6 +344,6 @@ SAR11_2500rar_clusters<-cap_plotsar11clusters_2 +
     show.legend = FALSE
   )
 
-
+###FINAL PLOT 4 panels####
 plot_grid(constrmiseq,constrmiseq_clusters,SAR11_2500rar,SAR11_2500rar_clusters,ncol=2,labels = "auto",label_size = 18)
 
