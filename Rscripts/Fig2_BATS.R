@@ -9,7 +9,7 @@
 ###NOTES###
 
 #NOTE1: I parsed the taxa file we have been using to have the same collapsing as BATS. 
-#tail -n +2 BATSBIOS_SAR11aln_mafft_trim_hd.unique.fa.aln.jplace.tab | sort -k 1,1 -n | cut -f 1,3 > 2021_tax.txt. Then I added this as the last column in the tax file as taxa
+#I added this as the last column in the tax file as taxa
 
 #NOTE2: To be consistent in time and station, only BATS samples were taken except for the (July) C7_N1_S112 AE1614 that was retrieved from BIOS-SCOPE collection
 
